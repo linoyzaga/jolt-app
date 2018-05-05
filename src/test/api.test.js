@@ -49,7 +49,7 @@ mocha.describe("POST /notification_reminder", function(){
     mocha.it("should send reminder to calenders", function(done){
         const emails = ["linoy@gmail.com", "haim@gmail.com"];
         const event_time = '05/05/2018 12:00';
-        const notify_time = '50000';
+        const notify_time = 50000;
 
         server
             .post("/scheduler/notification_reminder")
@@ -59,7 +59,7 @@ mocha.describe("POST /notification_reminder", function(){
 
     mocha.it('should not send reminders with missing params', (done) => {
         const emails = ["linoy@gmail.com"];
-        const notify_time = '50000';
+        const notify_time = 50000;
 
         server
             .post('/scheduler/notification_reminder')
@@ -73,8 +73,8 @@ mocha.describe("POST /notification_reminder", function(){
 
     mocha.it('should not send reminders with invalid params', (done) => {
         const emails = ["linoy@gmail.com"];
-        const event_time = '05/05/2018 12:00';
-        const notify_time = 50000;
+        const event_time = 123;
+        const notify_time = '50000';
 
         server
             .post('/scheduler/notification_reminder')
@@ -89,7 +89,7 @@ mocha.describe("POST /notification_reminder", function(){
 
 mocha.describe("POST /start_recycle", function(){
     mocha.it("should start recycle interval", function(done){
-        const frequency = '2000';
+        const frequency = 2000;
         const action = 'load_data';
 
         server
@@ -99,7 +99,7 @@ mocha.describe("POST /start_recycle", function(){
     });
 
     mocha.it('should not start recycle interval with missing params', (done) => {
-        const frequency = '2000';
+        const frequency = 2000;
 
         server
             .post('/scheduler/start_recycle')
@@ -113,7 +113,7 @@ mocha.describe("POST /start_recycle", function(){
 
     mocha.it('should not start recycle interval with invalid params', (done) => {
         const action = 'load_data';
-        const frequency = 20000;
+        const frequency = '20000';
 
         server
             .post('/scheduler/start_recycle')

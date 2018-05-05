@@ -1,5 +1,5 @@
-var peopleRoutes = require('./people/routes');
+const schedulerRoutes = require('./scheduler/routes');
 
 module.exports = function routes(app) {
-    app.use('/people', peopleRoutes);
+    app.use('/scheduler', schedulerRoutes);
 };

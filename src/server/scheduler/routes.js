@@ -1,87 +1,81 @@
-var mongoose = require('mongoose');
-var express = require('express');
-var People = require('./db').People;
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const timeFunctions = require('./timeFunctions');
+router.post('/email_reminder', function (req, res) {
+    const emails = req.body.emails;
+    const message = req.body.message;
+    const timeToSend = req.body.time;
 
-// Get all people by query
-router.post('/', function (req, res) {
+    // Validation
+    if (!message || !timeToSend || !emails) {
+       return res.status(400).send("Missing params!");
+    }
 
-    // Save the conditions into variables
-    var name = req.body.query.name;
-    var age = req.body.query.age;
-    var phone = req.body.query.phone;
-    var numToSkip = req.body.query.numToSkip;
+    if (typeof message !== 'string' || typeof timeToSend !== 'string' || ! emails instanceof Array) {
+        return res.status(400).send("Invalid params!");
+    }
 
-    // Build the query
-    var query = queryBuilder(name, age, phone);
+    const time = timeFunctions.getTimeInMilliseconds(timeToSend);
 
-    People.find(query, function (err, docs) {
+    timeFunctions.setEmailReminder(emails, time, message);
 
-        // Check if there is are any results for query
-        if (err) {
-            console.log('Unable to connect to the mongoDB server. Error:', err);
-        }
-
-        // Init the results to return
-        var resultsToReturn = {};
-        resultsToReturn.docs = docs;
-
-        if (resultsToReturn.docs.length < 10){
-            resultsToReturn.isEnd = true}
-        else {
-            resultsToReturn.isEnd = false;
-        }
-
-        // Return value
-        res.send(resultsToReturn);
-    }).limit(10).skip(numToSkip);
-
+    res.send("OK");
 });
 
-var queryBuilder = function (name, age, phone) {
+router.post('/notification_reminder', function (req, res) {
+    const emails = req.body.emails;
+    const eventTime = req.body.event_time;
+    const notifyTime = req.body.notify_time;
 
-    // Init the variable to return
-    var queryToReturn = {};
-
-    // Add the name condition
-    if (name.length > 0) {
-        try {
-            var nameExp = new RegExp(name.join(" "), 'i');
-        }
-        catch(err) {
-            nameExp = [];
-        }
-
-        queryToReturn.name = nameExp;
+    // Validation
+    if (!eventTime || !notifyTime || !emails) {
+        return res.status(400).send("Missing params!");
     }
 
-    // Add the phone condition
-    if (phone != undefined) {
-        queryToReturn.phone = phone;
+    if (typeof eventTime !== 'string' ||  !Number.isInteger(notifyTime) || ! emails instanceof Array) {
+        return res.status(400).send("Invalid params!");
     }
 
-    // Add the age condition
-    if (age != undefined) {
+    const time = timeFunctions.getTimeInMilliseconds(eventTime) - notifyTime;
 
-        var todayDate = new Date();
-        var thisYear = todayDate.getFullYear();
-        var thisMonth = todayDate.getMonth() + 1;
-        var thisDay = todayDate.getUTCDate();
-        var birthYear = (thisYear - age);
+    timeFunctions.setEventReminder(emails, time);
 
-        var beginString = "01/01/" + birthYear;
-        var endString = thisMonth + "/" + thisDay +"/" + birthYear;
+    res.send("OK");
+});
 
-        var beginOFYear = Date.parse(new Date(beginString));
-        var endOfYear = Date.parse(new Date(endString));
+router.post('/start_recycle', function (req, res) {
+    const interval = req.body.frequency;
+    const action = req.body.action;
 
-
-        // Set the query for all the people who got this age in this year
-        queryToReturn.birthday = {$gte: beginOFYear, $lt: endOfYear};
+    // Validation
+    if (!interval || !action) {
+        return res.status(400).send("Missing params!");
     }
 
-    // Return the new query
-    return queryToReturn;
-}
+    if ( !Number.isInteger(interval) || typeof action !== 'string') {
+        return res.status(400).send("Invalid params!");
+    }
+
+    const key = timeFunctions.startRecycle(interval, action);
+
+    res.send(key);
+});
+
+router.post('/stop_recycle', function (req, res) {
+    const intervalKey = req.body.interval_key;
+
+    // Validation
+    if (!intervalKey) {
+        return res.status(400).send("Missing params!");
+    }
+
+    if (typeof intervalKey !== 'string') {
+        return res.status(400).send("Invalid params!");
+    }
+
+    timeFunctions.stopRecycle(intervalKey);
+
+    res.send("OK");
+});
 
 module.exports = router;
