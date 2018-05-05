@@ -1,1 +1,1 @@
-# searchApp
+# Jolt Scheduler App
